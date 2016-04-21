@@ -6,7 +6,6 @@ import random
 class ChainMaker:
     PATHS = os.path.join(os.path.dirname(__file__), 'static/txt')
     REG_WORD = re.compile(r'[А-Яа-я]+')
-    MAX_LINE_SIZE = 4
     PREP_LEN = 2
     NON_PREP = set(['я', 'он', 'ты', 'вы', 'мы', 'ее', 'их', 'им', 'ей'])
 
@@ -20,10 +19,8 @@ class ChainMaker:
             if len(w) <= cls.PREP_LEN and w not in cls.NON_PREP:
                 data[num + 1] = w + ' ' + data[num + 1].lower()
         words = [d for d in data if len(d) > cls.PREP_LEN]
-        pattern = None
         if words:
             p = len(words)
-            # pattern = 'W' * min(p, cls.MAX_LINE_SIZE)
             for num, word in enumerate(words[:1:-1], 1):
                 if word not in chains:
                     chains[word] = set()
@@ -33,49 +30,47 @@ class ChainMaker:
             last_word = words[-1]
             if len(last_word) > 2:
                 rhymes.add(words[-1])
-        return rhymes, pattern, chains
+        return rhymes, chains
 
     @classmethod
     def analyze(cls):
         files = os.listdir(cls.PATHS)
         rhymes = set()
-        patterns = set()
         chains = dict()
         for file in files:
             path = os.path.join(cls.PATHS, file)
             with open(path, 'r') as f:
                 for line in f:
-                    r, p, c = cls.analyze_pattern(line)
+                    r, c = cls.analyze_pattern(line)
                     rhymes = rhymes.union(r)
-                    if p:
-                        patterns.add(p)
                     for k in c:
                         if k not in chains:
                             chains[k] = set()
                         chains[k] = chains[k].union(c[k])
-        return rhymes, patterns, chains
+        return rhymes, chains
 
 
 class Constructor:
     SONG_PATTERNS = {'VVCC', 'VCVC', 'VCVCC'}
     VERSE_LENGTH = 4
-    RHYME_PATTERNS, LINE_PATTERNS, CHAIN_PATTERNS = ChainMaker.analyze()
+    RHYME_PATTERNS, CHAIN_PATTERNS = ChainMaker.analyze()
     RHYME_DICT_MIN_SIZE = 3
     SIGNS = set(['.', '!', '...', '!!!'])
     PATTERN_CHORUS = set(['W', 'WW', 'WWW'])
     PATTERN_VERSE = set(['WW', 'WWW', 'WWWW', 'WWWWW'])
-    # pprint.pprint(CHAIN_PATTERNS)
 
     @classmethod
     def construct_pattern(cls, pattern, rhyme):
 
         def __construct_rhyme():
             if rhyme:
-                r_dict = [r for r in cls.RHYME_PATTERNS if len(r) > 2 and rhyme not in r and r != rhyme and r[-2:] == rhyme[-2:]]
+                r_dict = [r for r in cls.RHYME_PATTERNS if
+                          len(r) > 2 and rhyme not in r and r != rhyme and r[-2:] == rhyme[-2:]]
                 c = 0
                 while len(r_dict) < cls.RHYME_DICT_MIN_SIZE and c < len(rhyme):
                     c += 2
-                    r_dict = [r for r in cls.RHYME_PATTERNS if len(r) > c + 2 and rhyme not in r and r != rhyme and r[-2-c:-c] == rhyme[-2-c:-c]]
+                    r_dict = [r for r in cls.RHYME_PATTERNS if
+                              len(r) > c + 2 and rhyme not in r and r != rhyme and r[-2 - c:-c] == rhyme[-2 - c:-c]]
                 if len(r_dict) < cls.RHYME_DICT_MIN_SIZE:
                     return random.sample(cls.RHYME_PATTERNS, 1)[0]
                 return random.sample(r_dict, 1)[0]
@@ -118,6 +113,7 @@ class Constructor:
             elif v == 'C':
                 song.append(chorus)
         return '\n\n'.join(song)
+
 
 if __name__ == "__main__":
     verse = Constructor.construct()
