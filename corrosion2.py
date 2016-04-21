@@ -5,9 +5,10 @@ import random
 
 class ChainMaker:
     PATHS = os.path.join(os.path.dirname(__file__), 'static/txt')
-    REG_WORD = re.compile(r'[А-Яа-я]+')
+    REG_WORD = re.compile(r'[А-Яа-я]+\-*[А-Яа-я]+')
     PREP_LEN = 2
-    NON_PREP = {'я', 'он', 'ты', 'вы', 'мы', 'ее', 'их', 'им', 'ей'}
+    NON_PREP = {'я', 'он', 'ты', 'вы', 'мы', 'ее', 'их', 'им', 'ей', 'ад', 'ух', 'ой', 'те', 'та'}
+    PARTICLES = {'ли', 'бы', 'б', 'ка', 'то'}
 
     @classmethod
     def analyze_pattern(cls, pat):
@@ -16,8 +17,13 @@ class ChainMaker:
         data = cls.REG_WORD.findall(pat)
         for num, w in enumerate(data[:-1]):
             w = w.lower()
-            if len(w) <= cls.PREP_LEN and w not in cls.NON_PREP:
-                data[num + 1] = w + ' ' + data[num + 1].lower()
+            if len(w) <= cls.PREP_LEN:
+                if w in cls.NON_PREP:
+                    continue
+                if w in cls.PARTICLES and num:
+                    data[num - 1] = data[num - 1].lower() + ' ' + w
+                else:
+                    data[num + 1] = w + ' ' + data[num + 1].lower()
         words = [d for d in data if len(d) > cls.PREP_LEN]
         if words:
             p = len(words)
