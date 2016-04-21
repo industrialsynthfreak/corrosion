@@ -1,0 +1,21 @@
+body {
+    margin-left: 5rem;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: auto;
+}
+
+body, input, textarea {
+    background: black;
+    color: silver;
+}
+
+input, textarea {
+    border-color: white;
+    border-width: 1px;
+    border-radius: 0.2rem;
+}
+
+#poetry {
+    resize: none;
+    width: 25rem;
+}
