@@ -31,7 +31,7 @@ print(corroder.Constructor.construct())
 - PARTICLES - set список коротких слов частиц
 - REG_WORD - regex pattern паттерн поиска слов
 
-Аттрибуты класса Constructor:
+Аттрибуты класса `Constructor`:
 - SIGNS - set список знаков препинания
 - SONG_PATTERNS - set строк-паттернов песни, V - соответствует куплету, C - припеву.
 - VERSE_LENGTH - int число строк в куплете/припеве
