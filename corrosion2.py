@@ -7,7 +7,7 @@ class ChainMaker:
     PATHS = os.path.join(os.path.dirname(__file__), 'static/txt')
     REG_WORD = re.compile(r'[А-Яа-я]+')
     PREP_LEN = 2
-    NON_PREP = set(['я', 'он', 'ты', 'вы', 'мы', 'ее', 'их', 'им', 'ей'])
+    NON_PREP = {'я', 'он', 'ты', 'вы', 'мы', 'ее', 'их', 'им', 'ей'}
 
     @classmethod
     def analyze_pattern(cls, pat):
@@ -55,29 +55,47 @@ class Constructor:
     VERSE_LENGTH = 4
     RHYME_PATTERNS, CHAIN_PATTERNS = ChainMaker.analyze()
     RHYME_DICT_MIN_SIZE = 3
-    SIGNS = set(['.', '!', '...', '!!!'])
-    PATTERN_CHORUS = set(['W', 'WW', 'WWW'])
-    PATTERN_VERSE = set(['WW', 'WWW', 'WWWW', 'WWWWW'])
+    SIGNS = {'.', '!', '...', '!!!'}
+    CHORUS_LENGTH_MIN = 1
+    CHORUS_LENGTH_MAX = 3
+    VERSE_LENGTH_MIN = 2
+    VERSE_LENGTH_MAX = 5
+
+    @staticmethod
+    def _random_from_set(data):
+        return random.sample(data, 1)[0]
 
     @classmethod
     def construct_pattern(cls, pattern, rhyme):
 
         def __construct_rhyme():
+
+            def __rhyme_dict():
+                if not counter:
+                    c = None
+                else:
+                    c = counter
+                d = [r for r in cls.RHYME_PATTERNS if
+                     len(r) > -counter + 2 and
+                     rhyme not in r and
+                     r[-2+counter:c] == rhyme[-2+counter:c]]
+                return d
+
             if rhyme:
-                r_dict = [r for r in cls.RHYME_PATTERNS if
-                          len(r) > 2 and rhyme not in r and r != rhyme and r[-2:] == rhyme[-2:]]
-                c = 0
-                while len(r_dict) < cls.RHYME_DICT_MIN_SIZE and c < len(rhyme):
-                    c += 2
-                    r_dict = [r for r in cls.RHYME_PATTERNS if
-                              len(r) > c + 2 and rhyme not in r and r != rhyme and r[-2 - c:-c] == rhyme[-2 - c:-c]]
-                if len(r_dict) < cls.RHYME_DICT_MIN_SIZE:
-                    return random.sample(cls.RHYME_PATTERNS, 1)[0]
-                return random.sample(r_dict, 1)[0]
-            return random.sample(cls.RHYME_PATTERNS, 1)[0]
+                counter = 0
+                r_dict = []
+                while len(r_dict) < cls.RHYME_DICT_MIN_SIZE:
+                    r_dict = __rhyme_dict()
+                    counter -= 2
+                    if -counter > len(rhyme):
+                        r_dict = cls.RHYME_PATTERNS
+                        break
+            else:
+                r_dict = cls.RHYME_PATTERNS
+            return cls._random_from_set(r_dict)
 
         line = [__construct_rhyme()]
-        for v in pattern[-2::-1]:
+        for v in range(pattern - 1):
             word = cls.CHAIN_PATTERNS.get(line[-1])
             if word:
                 word = random.sample(word, 1)
@@ -88,23 +106,22 @@ class Constructor:
 
     @classmethod
     def construct_verse(cls, pat):
-        line_pattern = pat
         verse = []
         rhyme = None
         for _ in range(cls.VERSE_LENGTH):
             if verse:
                 rhyme = verse[-1][-1]
-            verse.append(cls.construct_pattern(line_pattern, rhyme))
+            verse.append(cls.construct_pattern(pat, rhyme))
         for num, line in enumerate(verse):
             verse[num] = ' '.join(line).capitalize()
-            verse[num] += random.sample(cls.SIGNS, 1)[0]
+            verse[num] += cls._random_from_set(cls.SIGNS)
         return '\n'.join(verse)
 
     @classmethod
-    def construct(cls, seed=None):
-        song_pattern = random.sample(cls.SONG_PATTERNS, 1)[0]
-        chorus_pat = random.sample(cls.PATTERN_CHORUS, 1)[0]
-        verse_pat = random.sample(cls.PATTERN_VERSE, 1)[0]
+    def construct(cls):
+        song_pattern = cls._random_from_set(cls.SONG_PATTERNS)
+        chorus_pat = random.randint(cls.CHORUS_LENGTH_MIN, cls.CHORUS_LENGTH_MAX)
+        verse_pat = random.randint(cls.VERSE_LENGTH_MIN, cls.VERSE_LENGTH_MAX)
         chorus = cls.construct_verse(chorus_pat)
         song = []
         for v in song_pattern:
@@ -116,5 +133,5 @@ class Constructor:
 
 
 if __name__ == "__main__":
-    verse = Constructor.construct()
-    print(verse)
+    text = Constructor.construct()
+    print(text)
